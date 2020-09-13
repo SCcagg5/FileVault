@@ -1,0 +1,6 @@
+bottle
+pymysql
+uuid
+pyAesCrypt
+crypto
+pyjwt

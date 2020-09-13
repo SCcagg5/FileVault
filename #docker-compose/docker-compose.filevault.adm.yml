@@ -1,0 +1,80 @@
+version: '3'
+
+networks:
+   proxy:
+     external:
+       name: docker-compose_fv-proxy
+   adm-net:
+     external:
+         name: docker-compose_fv-adm-net
+   db-net:
+     external:
+         name: docker-compose_fv-db-net
+
+services:
+   fv-admin-phpmyadmin:
+     image: phpmyadmin/phpmyadmin
+     container_name: fv-admin-phpmyadmin
+     environment:
+       - PMA_ARBITRARY=1
+     restart: always
+     volumes:
+       - ../Filevault/Admin/services/phpmyadmin/sessions:/sessions
+       - ../Filevault/Admin/services/phpmyadmin/config.inc.php:/etc/phpmyadmin/config.inc.php:ro
+     external_links:
+       - fv-web-sql:db
+     networks:
+       - db-net
+       - adm-net
+     environment:
+       PMA_USER: ${FV_DB_USER}
+       PMA_PASSWORD: ${FV_DB_PASS}
+
+   fv-admin-goaccess:
+     image: nginx
+     container_name: fv-admin-goaccess
+     restart: always
+     volumes:
+       - ../Filevault/Admin/services/goaccess/front:/usr/share/nginx/html:ro
+     networks:
+       - adm-net
+
+   fv-admin-goaccesscli:
+     image: allinurl/goaccess
+     container_name: fv-admin-goaccesscli
+     volumes:
+       - ../Proxy/logs/services:/logs/:ro
+       - ../Filevault/Admin/services/goaccess/conf:/etc/goaccess/
+       - ../Filevault/Admin/services/goaccess/front:/results/
+     entrypoint: "watch `goaccess /logs/api.${FV_DOMAIN}.log -o /results/api.${FV_DOMAIN}.html --log-format=COMBINED;`"
+     networks:
+       - adm-net
+
+   fv-admin-php:
+     image: php:fpm-alpine
+     container_name: fv-admin-php
+     volumes:
+       - ../Filevault/Admin/front:/script:ro
+       - ../Filevault/Admin/services/goaccess/front:/stats:ro
+     networks:
+       - adm-net
+
+   fv-admin-nginx:
+     image: nginx
+     container_name: fv-admin-nginx
+     restart: always
+     volumes:
+       - ../Filevault/Admin/front:/usr/share/nginx/html:ro
+       - ../Filevault/Admin/conf/admin.conf:/etc/nginx/conf.d/default.conf:ro
+     links:
+       - fv-admin-goaccess
+       - fv-admin-phpmyadmin
+       - fv-admin-php
+     networks:
+       - proxy
+       - adm-net
+     environment:
+       VIRTUAL_HOST: admin.${FV_DOMAIN}
+       VIRTUAL_PORT: 80
+       LETSENCRYPT_HOST: admin.${FV_DOMAIN}
+       LETSENCRYPT_EMAIL: ${FV_EMAIL}

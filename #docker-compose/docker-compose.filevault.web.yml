@@ -1,0 +1,53 @@
+version: '3'
+networks:
+  proxy:
+    external:
+      name: docker-compose_fv-proxy
+  db-net:
+    external:
+      name: docker-compose_fv-db-net
+
+services:
+  filevault-web-sql:
+    image: mysql:5.7
+    container_name: fv-web-sql
+    restart: always
+    networks:
+      - db-net
+    volumes:
+      - ../Filevault/Micro/sql/data:/var/lib/mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_DATABASE: fv
+      MYSQL_USER: ${FV_DB_USER}
+      MYSQL_PASSWORD: ${FV_DB_PASS}
+
+  bck-end:
+    build: ../Filevault/Webapps/api.filevault
+    container_name: fv-web-bck
+    ports:
+      - ${FV_API_PORT}:${FV_API_PORT}
+    tty: true
+    stdin_open: true
+    depends_on:
+      - filevault-web-sql
+    links:
+      - filevault-web-sql:database
+    networks:
+      - db-net
+      - proxy
+    volumes:
+      - ../Filevault/Webapps/api.filevault:/home/api/
+      - ../Filevault/Webapps/doc.filevault:/home/ged/
+    environment:
+      VIRTUAL_HOST: api.${FV_DOMAIN}
+      VIRTUAL_PORT: ${FV_API_PORT}
+      LETSENCRYPT_HOST: api.${FV_DOMAIN}
+      LETSENCRYPT_EMAIL: ${FV_EMAIL}
+      API_HOST: ${FV_API_HOST}
+      API_PORT: ${FV_API_PORT}
+      API_WEBA: ${FV_API_WEBA}
+      API_MOD: ${FV_API_MOD}
+      API_SCRT: ${FV_API_SCRT}
+      DB_USER: ${FV_DB_USER}
+      DB_PASS: ${FV_DB_PASS}
