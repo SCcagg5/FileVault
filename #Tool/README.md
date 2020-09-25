@@ -1,4 +1,12 @@
-# To Launch:
+# Tool
+
+**Purpose:** try the tool in localhost, initialize and send your firstfile to the backend
+
+**⚠ Warning ⚠** Do not use to connect to a production FileVault, only for testing, store wisely your data (email, password, filevault_password and rsa private_key)
+
+
+
+## To Launch:
 
 ```
 docker build -t initialisation_fv . ; docker run --name initialisation_fv initialisation_fv
