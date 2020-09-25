@@ -20,7 +20,7 @@ services:
             - 443:443
         volumes:
             - ../Proxy/logs/global:/var/log/nginx
-            - ../Proxy/conf/:/etc/nginx/conf.d/
+            - ../Proxy/conf/proxy.conf:/etc/nginx/conf.d/proxy.conf
             - ../Proxy/vhost:/etc/nginx/vhost.d
             - ../Proxy/passwd:/etc/nginx/htpasswd
             - ../Proxy/data/html:/usr/share/nginx/html

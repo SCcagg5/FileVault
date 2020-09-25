@@ -1,0 +1,8 @@
+__pycache__/
+Filevault/Micro/sql/data/
+Proxy/conf/d*
+Proxy/logs/services/
+Proxy/data/
+Proxy/passwd/
+Filevault/Webapps/doc.*
+ilevault/Admin/services/goaccess/

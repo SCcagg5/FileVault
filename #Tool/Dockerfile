@@ -13,5 +13,6 @@ COPY ./requirements.txt ./
 RUN pip3 install --upgrade -r requirements.txt
 
 COPY ./test.py ./
+COPY ./test.txt ./test
 
 ENTRYPOINT python3 --version; python3 test.py;

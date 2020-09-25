@@ -9,8 +9,11 @@ class sql:
         return pymysql.connect("database", db_user, db_pass,"fv" )
 
     def get(query, data):
-        db = sql.cred()
-        cursor = db.cursor()
+        try:
+            db = sql.cred()
+            cursor = db.cursor()
+        except:
+            return [[]]
         try:
             cursor.execute(query, data)
             to_ret =  cursor.fetchall()

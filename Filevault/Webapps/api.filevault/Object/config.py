@@ -1,6 +1,6 @@
 import jwt
 import hashlib
-import time, os, base64
+import time, os, base64, json
 from .sql import sql
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
@@ -8,9 +8,11 @@ from Crypto.Cipher import AES
 class config:
     def __init__(self):
         self.init = False
-        res = sql.get("SELECT COUNT(`config`.`id`) FROM config", ())[0][0]
-        if res == 1:
-            self.init = True
+        res = sql.get("SELECT COUNT(`config`.`id`) FROM config", ())[0]
+        if len(res) > 0:
+            res = res[0]
+            if res == 1:
+                self.init = True
 
     def check_init(self):
         ret = [False, "System isn't initialized.", 401]
@@ -18,11 +20,13 @@ class config:
             ret = [True, {}, None]
         return  ret
 
+    def infos(self):
+        return  [True, {"initialized": self.init}, 200]
+
     def init_func(self, email, password, rsa_p1):
         if self.init is True:
             return [False, "System is already initialized.", 401]
         password = self.__hash(email, password)
-        print(password)
         enc = self.__second_encode(password)
         rsa_2 = RSA.generate(4096)
         succes = sql.input("INSERT INTO `config` (id, `password`, `rsa_p1`, `rsa_k2`) VALUES (NULL, %s, %s, %s)", \
@@ -35,19 +39,19 @@ class config:
         return [True, {"pass": pass_encrypt, "rsa_p2": public_encrypt}, None]
 
     def get_public(self, password, email = None):
-        if email is not None:
+        if email is None:
             enc = self.__second_encode(password)
         else:
             password = self.__hash(email, password)
             enc = self.__second_encode(password)
-        res = sql.get("SELECT password, rsa_p1, rsa_k2", ())[0]
+        res = sql.get("SELECT password, rsa_p1, rsa_k2 FROM config", ())[0]
         if enc != res[0]:
             return [False, "Invalid credentials", 403]
         rsa_1 = RSA.importKey(str.encode(res[1]))
         rsa_2 = RSA.importKey(str.encode(res[2]))
         pass_encrypt = base64.b64encode(rsa_1.encrypt(str.encode(password), 32)[0]).decode('utf-8')
         public_encrypt = AES.new(password)
-        public_encrypt = public_encrypt.encrypt(self.__to16(rsa_2.publickey().exportKey('PEM').decode('utf-8')))
+        public_encrypt = base64.b64encode(public_encrypt.encrypt(self.__to16(rsa_2.publickey().exportKey('PEM').decode('utf-8')))).decode('utf-8')
         return [True, {"pass": pass_encrypt, "rsa_p2": public_encrypt}, None]
 
     def generate_rsa(self, size = 4096):
@@ -68,6 +72,25 @@ class config:
                }
         return [True, ret, 200]
 
+    def getrsa(self):
+        res = sql.get("SELECT rsa_p1, rsa_k2 FROM config", ())
+        if len(res) != 1:
+            return [False, "Error", 500]
+        res = res[0]
+        rsa_1 = RSA.importKey(str.encode(res[0]))
+        rsa_2 = RSA.importKey(str.encode(res[1]))
+        return {"rsa_p1": rsa_1, "rsa_pk2": rsa_2}
+
+    def unencode(self, key, data):
+        rsa = self.getrsa()
+        rsa_2 = rsa['rsa_pk2']
+        byte_tuple = (base64.b64decode(key), )
+        aes_key_decrypt = rsa_2.decrypt(byte_tuple)
+        aes_key = AES.new(aes_key_decrypt)
+        data = base64.b64decode(data)
+        data = json.loads(aes_key.decrypt(data).decode('utf-8').strip())
+        return [True, data, None]
+
     def __getsecret(self):
         return str(os.getenv('API_SCRT', '!@ws4RT4ws212@#%'))
 
@@ -78,17 +101,11 @@ class config:
         n = s % (len(password) - 1 if len(password) > 1 else 1)
         secret = self.__getsecret()
         salted = password[:n] + str(s) + password[n:] + secret
-        hashed = hashlib.sha256(salted.encode('utf-8')).hexdigest()
+        hashed = hashlib.sha512(salted.encode('utf-8')).hexdigest()
         key = hashlib.md5(hashed.encode('utf-8')).hexdigest()
         while len(key) < 32:
             key += key
         return key[:32]
-
-    def __getIV(self):
-        scrt = self.__getsecret()
-        while len(scrt) < 16:
-            scrt += scrt
-        return  scrt[:16]
 
     def __to16(self, str):
         while len(str) % 16 != 0:
