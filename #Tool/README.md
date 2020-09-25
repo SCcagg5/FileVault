@@ -11,7 +11,7 @@ Store **wisely** your data (email, password, filevault_password and rsa private_
 ## To Launch:
 
 ```
-docker build -t initialisation_fv . ; docker run --name initialisation_fv initialisation_fv
+docker build -t initialisation_fv . ; docker run --rm --name initialisation_fv initialisation_fv
 ```
 
 ## First Output
