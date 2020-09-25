@@ -2,7 +2,12 @@
 
 **Purpose:** try the tool in localhost, initialize and send your firstfile to the backend
 
-**⚠ Warning ⚠** Do **not** use to connect to a production *FileVault*, store **wisely** your data (email, password, filevault_password and rsa private_key)
+
+**⚠ Warning ⚠** 
+
+Do **not** use to connect to a production *FileVault*
+
+Store **wisely** your data (email, password, filevault_password and rsa private_key)
 
 
 
