@@ -4,9 +4,7 @@
 
 
 **⚠ Warning ⚠** 
-
 Do **not** use to connect to a production *FileVault*
-
 Store **wisely** your data (email, password, filevault_password and rsa private_key)
 
 
