@@ -1,4 +1,4 @@
-#To Lanch:
+# To Launch:
 
 ```
 docker build -t initialisation_fv . ; docker run --name initialisation_fv initialisation_fv
