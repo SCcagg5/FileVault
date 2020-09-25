@@ -3,10 +3,9 @@
 **Purpose:** try the tool in localhost, initialize and send your firstfile to the backend
 
 
-**⚠ Warning ⚠** 
-Do **not** use to connect to a production *FileVault*
+**⚠ Warning ⚠** <br/>
+Do **not** use to connect to a production *FileVault*<br/>
 Store **wisely** your data (email, password, filevault_password and rsa private_key)
-
 
 
 ## To Launch:
